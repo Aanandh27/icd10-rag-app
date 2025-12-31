@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 from sentence_transformers import SentenceTransformer
+import faiss
+
 
 # -----------------------------
 # App Title
@@ -15,7 +17,7 @@ df = pd.read_csv("icd10_codes.csv")
 st.write(f"Total ICD-10 codes loaded: {len(df)}")
 
 # -----------------------------
-# Load Embedding Model (STEP 3.2)
+# Load Embedding Model 
 # -----------------------------
 @st.cache_resource
 def load_embedding_model():
@@ -24,7 +26,7 @@ def load_embedding_model():
 embedding_model = load_embedding_model()
 
 # -----------------------------
-# Create ICD-10 Embeddings (STEP 3.3)
+# Create ICD-10 Embeddings 
 # -----------------------------
 @st.cache_resource
 def create_icd10_embeddings(descriptions):
@@ -34,11 +36,34 @@ def create_icd10_embeddings(descriptions):
 icd10_embeddings = create_icd10_embeddings(df["description"].tolist())
 
 # -----------------------------
-# Embedding Test (STEP 3.4)
+# FAISS
 # -----------------------------
-st.subheader("Embedding Test")
-st.write("Embedding vector length:")
-st.write(len(icd10_embeddings[0]))
+
+@st.cache_resource
+def build_faiss_index(embeddings):
+    dimension = embeddings.shape[1]
+    index = faiss.IndexFlatL2(dimension)
+    index.add(np.array(embeddings))
+    return index
+
+faiss_index = build_faiss_index(icd10_embeddings)
+# -----------------------------
+# Search Function
+# -----------------------------
+def search_icd10_codes(query, top_k=5):
+    query_embedding = embedding_model.encode([query])
+    distances, indices = faiss_index.search(
+        np.array(query_embedding), top_k
+    )
+
+    results = []
+    for idx in indices[0]:
+        code = df.iloc[idx]["code"]
+        description = df.iloc[idx]["description"]
+        results.append((code, description))
+
+    return results
+
 
 # -----------------------------
 # User Input (STAGE 2)
@@ -53,6 +78,15 @@ user_input = st.text_area(
 if user_input:
     st.subheader("You entered:")
     st.write(user_input)
+# -----------------------------
+# FAISS TEST
+# -----------------------------
+if user_input:
+    st.subheader("Top Retrieved ICD-10 Codes (Vector Search)")
+    results = search_icd10_codes(user_input)
+    for code, desc in results:
+        st.write(f"**{code}**: {desc}")
+
 
 # -----------------------------
 # Preview ICD-10 Data
