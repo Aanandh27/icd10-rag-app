@@ -3,6 +3,9 @@ import pandas as pd
 import numpy as np
 from sentence_transformers import SentenceTransformer
 import faiss
+from google import generativeai as genai
+import os
+
 
 
 # -----------------------------
@@ -87,6 +90,64 @@ if user_input:
     results = search_icd10_codes(user_input)
     for code, desc in results:
         st.write(f"**{code}**: {desc}")
+
+# -----------------------------
+# API 
+# -----------------------------
+
+api_key = os.getenv("GOOGLE_API_KEY")
+if not api_key:
+    st.error("Gemini API key not found.")
+    st.stop()
+
+client = genai.Client(api_key=api_key)
+
+# -----------------------------
+# Gemini Prompt
+# -----------------------------
+
+def build_gemini_prompt(user_query, retrieved_codes):
+    context = "\n".join([f"{code}: {desc}" for code, desc in retrieved_codes])
+    
+    prompt = f"""
+You are a medical coding assistant.
+
+Clinical description:
+{user_query}
+
+Candidate ICD-10-CM codes:
+{context}
+
+Task:
+Select the most relevant ICD-10-CM codes.
+Explain each in 1-2 sentences.
+Do NOT add new codes.
+Provide a bullet-point list.
+"""
+    return prompt
+
+# -----------------------------
+# reasoning
+# -----------------------------
+
+def generate_reasoning_gemini(user_query, retrieved_codes):
+    prompt = build_gemini_prompt(user_query, retrieved_codes)
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt
+    )
+    return response.text
+
+if user_input:
+    st.subheader("Top Retrieved ICD-10 Codes (Vector Search)")
+    retrieved = search_icd10_codes(user_input)
+    for code, desc in retrieved:
+        st.write(f"**{code}**: {desc}")
+
+    st.subheader("Gemini Explanation")
+    explanation = generate_reasoning_gemini(user_input, retrieved)
+    st.write(explanation)
+
 
 
 # -----------------------------
