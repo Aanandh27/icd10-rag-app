@@ -4,7 +4,7 @@ import numpy as np
 import faiss
 from sentence_transformers import SentenceTransformer
 import os
-from google import generativeai as genai
+from google import genai
 
 
 # -----------------------------
