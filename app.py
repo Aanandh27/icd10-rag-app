@@ -11,7 +11,12 @@ from google import genai
 # App Title
 # -----------------------------
 st.title("ICD-10 Code Suggester")
-st.write("Enter a clinical description to explore relevant ICD-10 codes.")
+st.write(
+    "Enter a clinical description below and click **Search ICD-10 Codes** "
+    "To retrieve relevant ICD-10-CM codes with AI-generated explanations.")
+
+st.warning("⚠️ This tool is for educational purposes only and does not provide medical or billing advice.")
+
 
 # -----------------------------
 # Gemini API Setup (STEP 5)
@@ -29,7 +34,8 @@ client = genai.Client(api_key=api_key)
 # Load ICD-10 Data
 # -----------------------------
 df = pd.read_csv("icd10_codes.csv")
-st.write(f"Total ICD-10 codes loaded: {len(df)}")
+st.caption(f"Using {len(df)} ICD-10-CM codes (CMS dataset)")
+
 
 # -----------------------------
 # Load Embedding Model 
@@ -114,28 +120,53 @@ def generate_reasoning_gemini(user_query, retrieved_codes):
     )
 
     return response.text
+#
 
+st.sidebar.header("Search Settings")
+top_k = st.sidebar.slider(
+    "Number of ICD-10 codes to retrieve",
+    min_value=3,
+    max_value=10,
+    value=5
+)
 
 # -----------------------------
-# User Input (STAGE 2)
+# User Input
 # -----------------------------
 st.subheader("Clinical Description")
+
 user_input = st.text_area(
     "Describe the patient's condition:",
     placeholder="e.g., acute chest pain after exercise",
     height=120
 )
 
-if user_input:
-    st.subheader("You entered:")
-    st.write(user_input)
+search_clicked = st.button("🔍 Search ICD-10 Codes")
+
+if search_clicked:
+    if not user_input.strip():
+        st.error("Please enter a clinical description before searching.")
+        st.stop()
+
+    st.subheader("Top Retrieved ICD-10 Codes (Vector Search)")
+    retrieved = search_icd10_codes(user_input, top_k=top_k)
+
+    for code, desc in retrieved:
+        st.write(f"**{code}**: {desc}")
+
+    st.subheader("AI Explanation")
+    with st.spinner("Analyzing with Gemini..."):
+        explanation = generate_reasoning_gemini(user_input, retrieved)
+
+    st.markdown(explanation)
+
 
 # -----------------------------
 # FAISS TEST
 # -----------------------------
 if user_input:
     st.subheader("Top Retrieved ICD-10 Codes (Vector Search)")
-    retrieved = search_icd10_codes(user_input)
+    retrieved = search_icd10_codes(user_input, top_k=top_k)
 
     for code, desc in retrieved:
         st.write(f"**{code}**: {desc}")
