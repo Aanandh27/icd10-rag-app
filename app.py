@@ -71,7 +71,7 @@ faiss_index = build_faiss_index(icd10_embeddings)
 # -----------------------------
 # Search Function
 # -----------------------------
-def search_icd10_codes(query, top_k=5):
+def search_icd10_codes(query, top_k=3):
     query_embedding = embedding_model.encode([query])
     distances, indices = faiss_index.search(
         np.array(query_embedding), top_k
@@ -120,15 +120,6 @@ def generate_reasoning_gemini(user_query, retrieved_codes):
     )
 
     return response.text
-#
-
-st.sidebar.header("Search Settings")
-top_k = st.sidebar.slider(
-    "Number of ICD-10 codes to retrieve",
-    min_value=3,
-    max_value=10,
-    value=5
-)
 
 # -----------------------------
 # User Input
@@ -149,7 +140,7 @@ if search_clicked:
         st.stop()
 
     st.subheader("Top Retrieved ICD-10 Codes (Vector Search)")
-    retrieved = search_icd10_codes(user_input, top_k=top_k)
+    retrieved = search_icd10_codes(user_input)
 
     for code, desc in retrieved:
         st.write(f"**{code}**: {desc}")
@@ -160,22 +151,6 @@ if search_clicked:
 
     st.markdown(explanation)
 
-
-# -----------------------------
-# FAISS TEST
-# -----------------------------
-if user_input:
-    st.subheader("Top Retrieved ICD-10 Codes (Vector Search)")
-    retrieved = search_icd10_codes(user_input, top_k=top_k)
-
-    for code, desc in retrieved:
-        st.write(f"**{code}**: {desc}")
-
-    st.subheader("Gemini Explanation")
-    with st.spinner("Gemini is analyzing..."):
-        explanation = generate_reasoning_gemini(user_input, retrieved)
-
-    st.write(explanation)
 
 
 
