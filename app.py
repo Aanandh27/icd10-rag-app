@@ -163,6 +163,7 @@ if search_clicked:
 
     st.markdown(explanation)
 
+st.caption("Built as a learning project using Retrieval-Augmented Generation (RAG)")
 
 
 
