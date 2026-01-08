@@ -89,7 +89,9 @@ def search_icd10_codes(query, top_k=3):
 # Gemini Prompt Builder
 # -----------------------------
 def build_gemini_prompt(user_query, retrieved_codes):
-    context = "\n".join([f"{code}: {desc}" for code, desc in retrieved_codes])
+    context = "\n".join(
+        [f"{i+1}. {code}: {desc}" for i, (code, desc) in enumerate(retrieved_codes)]
+    )
 
     prompt = f"""
 You are a medical coding assistant.
@@ -97,16 +99,26 @@ You are a medical coding assistant.
 Clinical description:
 {user_query}
 
-Candidate ICD-10-CM codes:
+Below are EXACTLY 3 ICD-10-CM codes retrieved by semantic search:
+
 {context}
 
 Task:
-Select the most relevant ICD-10-CM codes.
-Explain each in 1–2 sentences.
-Do NOT add new codes.
-Use bullet points.
+- Explain EACH of the 3 codes separately
+- Use the same numbering as above (1, 2, 3)
+- Explain why EACH code is relevant to the clinical description
+- Use 1–2 sentences per code
+- Do NOT skip any code
+- Do NOT add new codes
+- Do NOT reorder the codes
+
+Output format:
+1. CODE – explanation
+2. CODE – explanation
+3. CODE – explanation
 """
     return prompt
+
 
 # -----------------------------
 # Gemini Reasoning
