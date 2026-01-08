@@ -10,7 +10,7 @@ from google import genai
 # -----------------------------
 # App Title
 # -----------------------------
-st.title("ICD-10 Code Suggester")
+st.title("ICD-10 Code Finder")
 st.write(
     "Enter a clinical description below and click **Search ICD-10 Codes** "
     "to retrieve relevant ICD-10-CM codes with AI-generated explanations.")
