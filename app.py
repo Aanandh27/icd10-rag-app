@@ -152,7 +152,7 @@ if search_clicked:
         st.stop()
 
     st.subheader("Top Retrieved ICD-10 Codes (Vector Search)")
-    retrieved = search_icd10_codes(user_input,top_k=top_k)
+    retrieved = search_icd10_codes(user_input)
 
     for code, desc in retrieved:
         st.write(f"**{code}**: {desc}")
