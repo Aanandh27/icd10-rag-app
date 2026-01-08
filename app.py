@@ -13,13 +13,13 @@ from google import genai
 st.title("ICD-10 Code Suggester")
 st.write(
     "Enter a clinical description below and click **Search ICD-10 Codes** "
-    "To retrieve relevant ICD-10-CM codes with AI-generated explanations.")
+    "to retrieve relevant ICD-10-CM codes with AI-generated explanations.")
 
 st.warning("⚠️ This tool is for educational purposes only and does not provide medical or billing advice.")
 
 
 # -----------------------------
-# Gemini API Setup (STEP 5)
+# Gemini API Setup 
 # -----------------------------
 api_key = os.getenv("GOOGLE_API_KEY")
 
